@@ -109,7 +109,7 @@ all_seasons <- merge(all_seasons, final_scores, by = "GameID")
 # rm(season2017)
 # rm(season2018)
 
-all_seasons <- all_seasons[c(1:2000),]
+#all_seasons <- all_seasons[c(1:2000),]
 
 
 #partition
@@ -134,7 +134,7 @@ testing <- all_seasons[-inTrain,]
 modFit_rf <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + offense_year
                    + defense_year + TimeSecs + home_team_score + away_team_score, 
                    method = "rf",
-                   trControl = trainControl(method = "cv", number = 3), 
+                   trControl = trainControl(method = "cv", number = 5), 
                    metric = "RMSE",
                    data = training)
 print(modFit_rf) # RMSE (in-sample) = 0.119
@@ -143,14 +143,16 @@ print(modFit_rf) # RMSE (in-sample) = 0.119
 pred_rf <- predict(modFit_rf, testing)
 testing_predictions <- cbind(predict(modFit_rf, testing), testing)
 testing_predictions <- testing_predictions[,c(1,112,2:111)]
-names(testing_predictions)[1] <- "home_team_final_margin_predict"
+names(testing_predictions)[1] <- "home_team_margin_final_predict"
 
 
 #merge predictions onto dataset
 training_predictions <- cbind(predict(modFit_rf, training), training)
 training_predictions <- training_predictions[,c(1,112,2:111)]
-names(training_predictions)[1] <- "home_team_final_margin_predict"
+names(training_predictions)[1] <- "home_team_margin_final_predict"
 RMSE(predict(modFit_rf, testing), testing$home_team_margin_final)
+testing_predictions <- testing_predictions[,c("home_team_score", "away_team_score", "home_team_margin_final",
+                                              "home_team_margin_final_predict")]
 
 
 
