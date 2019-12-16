@@ -7,34 +7,33 @@ library(nflscrapR)
 library(nnet)
 library(dplyr)
 library(caret)
-# 
-# 
-# 
-# # # load 2018 play-by-play data
-# season2009 <- season_play_by_play(Season = 2009)
-# season2010 <- season_play_by_play(Season = 2010)
-# season2011 <- season_play_by_play(Season = 2011)
-# season2012 <- season_play_by_play(Season = 2012)
-# season2013 <- season_play_by_play(Season = 2013)
-# season2014 <- season_play_by_play(Season = 2014)
-# season2015 <- season_play_by_play(Season = 2015)
-# season2016 <- season_play_by_play(Season = 2016)
-# season2017 <- season_play_by_play(Season = 2017)
-# season2018 <- season_play_by_play(Season = 2018)
-# 
-# 
-# 
-# # binding into a single dataset
-# all_seasons <- rbind(season2009, season2010, season2011, season2012, 
-#                      season2013,season2014, season2015, season2016, 
-#                      season2017, season2018)
-# 
+
+
+
+# # load 2018 play-by-play data
+season2009 <- season_play_by_play(Season = 2009)
+season2010 <- season_play_by_play(Season = 2010)
+season2011 <- season_play_by_play(Season = 2011)
+season2012 <- season_play_by_play(Season = 2012)
+season2013 <- season_play_by_play(Season = 2013)
+season2014 <- season_play_by_play(Season = 2014)
+season2015 <- season_play_by_play(Season = 2015)
+season2016 <- season_play_by_play(Season = 2016)
+season2017 <- season_play_by_play(Season = 2017)
+season2018 <- season_play_by_play(Season = 2018)
+
+
+
+# binding into a single dataset
+all_seasons_orig <- rbind(season2009, season2010, season2011, season2012,
+                     season2013,season2014, season2015, season2016,
+                     season2017, season2018)
+saveRDS(all_seasons, file = "/Users/evanthompson/SDP/spread_data/all_seasons_orig.rds")
 
 
 #can start from here
-all_seasons_orig <- readRDS("~/SDP/spread_data/all_seasons.rds")
+#all_seasons_orig <- readRDS("~/SDP/spread_data/all_seasons.rds")
 all_seasons <- all_seasons_orig
-#all_seasons <- all_seasons[ which(all_seasons$Season == 2017),]
 
 
 #cleaning
@@ -137,7 +136,7 @@ modFit_rf <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + offens
                    trControl = trainControl(method = "cv", number = 5), 
                    metric = "RMSE",
                    data = training)
-print(modFit_rf) # RMSE (in-sample) = 0.119
+print(modFit_rf) # RMSE (in-sample) = 
 
 #test
 pred_rf <- predict(modFit_rf, testing)
@@ -156,3 +155,34 @@ testing_predictions <- testing_predictions[,c("home_team_score", "away_team_scor
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#train final model on master dataset, merge onto master dataset
+modFit_rf_final <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + offense_year
+                   + defense_year + TimeSecs + home_team_score + away_team_score, 
+                   method = "rf",
+                   trControl = trainControl(method = "cv", number = 5), 
+                   metric = "RMSE",
+                   data = all_seasons)
+print(modFit_rf_final) # RMSE (in-sample) = 
+
+#merge predictions onto dataset
+all_seasons_predictions <- cbind(predict(modFit_rf_final, all_seasons), all_seasons)
+#all_seasons_predictions <- tall_seasons_predictions[,c(1,112,2:111)]
+#names(training_predictions)[1] <- "home_team_margin_final_predict"
