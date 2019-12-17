@@ -182,8 +182,8 @@ print(modFit_rf_final) # RMSE (in-sample) =
 
 #merge predictions onto dataset
 all_seasons_predictions <- cbind(predict(modFit_rf_final, all_seasons), all_seasons)
-#all_seasons_predictions <- tall_seasons_predictions[,c(1,112,2:111)]
-#names(training_predictions)[1] <- "home_team_margin_final_predict"
+all_seasons_predictions <- all_seasons_predictions[,c(1,112, 92, 2:91, 93:111)]
+names(all_seasons_predictions)[1] <- "home_team_margin_final_predict"
 
 
 rm(training)
@@ -192,3 +192,5 @@ rm(inTrain)
 rm(final_scores)
 rm(all_seasons)
 rm(all_seasons_orig)
+
+write.csv(all_seasons_predictions, "/Users/evanthompson/SDP/spread_data/all_seasons_predictions.csv")
