@@ -90,8 +90,7 @@ final_scores <- all_seasons %>%
 final_scores <- final_scores[,c("GameID", "home_team_margin")]
 names(final_scores) <- c("GameID", "home_team_margin_final")
 all_seasons <- merge(all_seasons, final_scores, by = "GameID")
-
-
+all_seasons$home_team_pos_ball <- ifelse(all_seasons$posteam == all_seasons$HomeTeam, 1, -1)
 
 
 
@@ -119,19 +118,21 @@ testing <- all_seasons[-inTrain,]
 
 # models
 
-# # MODEL 1: create multinomial logistic regression model 1 (w/ team effect, year-specific team)
-# modFit_multi1 <- multinom(home_team_margin_final ~  factor(down) + ydstogo + yrdline100 + factor(offense_year) + 
-#                    factor(defense_year), 
-#                  data=all_seasons, MaxNWts = 99999)
+# # # MODEL 1: create multinomial logistic regression model 1 (w/ team effect, year-specific team)
+# modFit_multi1 <- multinom(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball + home_team_margin + TimeSecs, 
+#                  data=training, MaxNWts = 99999)
 # print(modFit_multi1)
-# saveRDS(modFit_multi1, file = "modFit_multi1.rds")
+# training_predictions <- cbind(predict(modFit_multi1, training), training)
+# training_predictions <- training_predictions[,c(1,112,2:111, 113)]
+# names(training_predictions)[1] <- "home_team_margin_final_predict"
+# RMSE(training_predictions$home_team_margin_final_predict, training_predictions$home_team_margin_final)
+# # saveRDS(modFit_multi1, file = "modFit_multi1.rds")
 
 
 # MODEL 2 (random forest)
-modFit_rf <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + offense_year
-                   + defense_year + TimeSecs + home_team_score + away_team_score, 
+modFit_rf <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball + home_team_margin + TimeSecs, 
                    method = "rf",
-                   trControl = trainControl(method = "cv", number = 8), 
+                   trControl = trainControl(method = "cv", number = 3), 
                    metric = "RMSE",
                    data = training)
 print(modFit_rf) # RMSE (in-sample) = 2.86
@@ -139,13 +140,13 @@ print(modFit_rf) # RMSE (in-sample) = 2.86
 #test
 pred_rf <- predict(modFit_rf, testing)
 testing_predictions <- cbind(predict(modFit_rf, testing), testing)
-testing_predictions <- testing_predictions[,c(1,112,2:111)]
+testing_predictions <- testing_predictions[,c(1,112,2:111, 113)]
 names(testing_predictions)[1] <- "home_team_margin_final_predict"
 
 
 #merge predictions onto dataset
 training_predictions <- cbind(predict(modFit_rf, training), training)
-training_predictions <- training_predictions[,c(1,112,2:111)]
+training_predictions <- training_predictions[,c(1,112,2:111, 113)]
 names(training_predictions)[1] <- "home_team_margin_final_predict"
 RMSE(predict(modFit_rf, testing), testing$home_team_margin_final)
 testing_predictions <- testing_predictions[,c("home_team_score", "away_team_score", "home_team_margin_final",
@@ -153,18 +154,75 @@ testing_predictions <- testing_predictions[,c("home_team_score", "away_team_scor
 
 
 
+# MODEL 3 (linear regression)
+modFit_linear1 <- lm(home_team_margin_final ~ down*home_team_pos_ball + ydstogo*home_team_pos_ball + 
+                           yrdline100*home_team_pos_ball + home_team_margin + TimeSecs + HomeTeam + AwayTeam
+                           ,
+                 data=training)
+print(modFit_linear1)
+training_predictions <- cbind(predict(modFit_linear1, training), training)
+training_predictions <- training_predictions[,c(1,112,2:111, 113)]
+names(training_predictions)[1] <- "home_team_margin_final_predict"
+RMSE(training_predictions$home_team_margin_final_predict, training_predictions$home_team_margin_final)
+# saveRDS(modFit_multi1, file = "modFit_multi1.rds")
+pred_rf <- predict(modFit_linear1, testing)
+testing_predictions <- cbind(predict(modFit_linear1, testing), testing)
+testing_predictions <- testing_predictions[,c(1,112,2:111, 113)]
+names(testing_predictions)[1] <- "home_team_margin_final_predict"
+RMSE(testing_predictions$home_team_margin_final_predict, testing_predictions$home_team_margin_final)
 
 
 
 
 
 
+# MODEL 4 (Bagged CART)
+modFit_tbag <- train(home_team_margin_final ~ down*home_team_pos_ball + ydstogo*home_team_pos_ball + yrdline100*home_team_pos_ball + home_team_margin + TimeSecs, 
+                   method = "treebag",
+                   trControl = trainControl(method = "cv", number = 5), 
+                   metric = "RMSE",
+                   data = training)
+print(modFit_tbag) # RMSE (in-sample) =
+
+
+
+# MODEL 5 (random forest)
+modFit_rf5 <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball + 
+                         home_team_margin + TimeSecs + HomeTeam + AwayTeam, 
+                   method = "rf",
+                   trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
+                   metric = "RMSE",
+                   data = training)
+print(modFit_rf5) # RMSE (in-sample) = 2.86
+importance <- varImp(modFit_rf5, scale=FALSE)
+print(importance)
+plot(importance)
+
+
+
+# MODEL 6 (random forest)
+modFit_rf6 <- train(home_team_margin_final ~ down*home_team_pos_ball + ydstogo*home_team_pos_ball + yrdline100*home_team_pos_ball +
+                          home_team_margin + TimeSecs + HomeTeam + AwayTeam, 
+                    method = "rf",
+                    trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
+                    metric = "RMSE",
+                    data = training)
+print(modFit_rf6) # RMSE (in-sample) = 2.86
+importance <- varImp(modFit_rf6, scale=FALSE)
+print(importance)
+plot(importance)
 
 
 
 
 
-
+# MODEL 4 (Bagged CART)
+modFit_tbag <- train(home_team_margin_final ~ down*home_team_pos_ball + ydstogo*home_team_pos_ball + yrdline100*home_team_pos_ball + home_team_margin + TimeSecs, 
+                     method = "brnn",
+                     trControl = trainControl(method = "cv", number = 5), 
+                     metric = "RMSE",
+                     data = training)
+print(modFit_tbag) # RMSE (in-sample) =
 
 
 
@@ -172,8 +230,9 @@ testing_predictions <- testing_predictions[,c("home_team_score", "away_team_scor
 
 
 #train final model on master dataset, merge onto master dataset
-modFit_rf_final <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + offense_year
-                   + defense_year + TimeSecs + home_team_score + away_team_score, 
+modFit_rf_final <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + 
+                   #+ offense_year + defense_year + TimeSecs + home_team_score + away_team_score
+                   , 
                    method = "rf",
                    trControl = trainControl(method = "cv", number = 8), 
                    metric = "RMSE",
@@ -194,3 +253,23 @@ rm(all_seasons)
 rm(all_seasons_orig)
 
 write.csv(all_seasons_predictions, "/Users/evanthompson/SDP/spread_data/all_seasons_predictions.csv")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#explore relationships
+ggplot(all_seasons, aes(x=home_team_pos_ball, y=home_team_margin_final, color=home_team_pos_ball)) + geom_point() + geom_smooth()
+
+
