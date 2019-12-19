@@ -1,5 +1,4 @@
 #calculate play-by-play spread changes
-tic()
 setwd("/Users/evanthompson/SDP/spread")
 
 #load packages
@@ -11,6 +10,7 @@ library(lubridate)
 library(rpart)
 library(tictoc)
 
+tic()
 
 # # load 2018 play-by-play data
 # season2009 <- season_play_by_play(Season = 2009)
