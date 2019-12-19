@@ -335,8 +335,7 @@ all_seasons_predictions <- cbind(predict(modFit_final, all_seasons), all_seasons
 all_seasons_predictions <- all_seasons_predictions[,c(1,120,2:119)]
 names(all_seasons_predictions)[1] <- "home_team_margin_final_predict"
 RMSE(all_seasons_predictions$home_team_margin_final_predict, all_seasons_predictions$home_team_margin_final)
-
-
+saveRDS(modFit_final, file = "modFit_final.rds")
 
 
 
