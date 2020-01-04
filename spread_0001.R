@@ -9,6 +9,9 @@ library(caret)
 library(lubridate)
 library(rpart)
 library(tictoc)
+library(randomForest)
+
+set.seed(69)
 
 tic()
 
@@ -302,6 +305,30 @@ testing <- all_seasons[-inTrain,]
 #                       data = training)
 # print(modFit_black) # RMSE (in-sample) =
 
+
+
+
+
+keep_vars <- c("home_team_margin_final", "down", "ydstogo", "yrdline100", "home_team_pos_ball",
+               "home_team_margin", "TimeSecs", "HomeTeam", "AwayTeam", "home_team_spread")
+training <- training[,keep_vars]
+testing <- testing[,keep_vars]
+
+
+
+#testing with randomForest package
+training_small <- training[c(1:20000),]
+testing_small <- testing[c(1:5000),]
+training_small=training_small %>% mutate_if(is.character, as.factor)
+testing_small=testing_small %>% mutate_if(is.character, as.factor)
+modFit_test <- randomForest(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball + 
+                            home_team_margin + TimeSecs + HomeTeam + AwayTeam + home_team_spread, 
+                            trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
+                            ntree = 200,
+                            data = training_small)
+print(modFit_test)
+postResample(predict(modFit_test, training_small), training_small$home_team_margin_final)
+postResample(predict(modFit_test, testing_small), testing_small$home_team_margin_final)
 
 
 
