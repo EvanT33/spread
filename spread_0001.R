@@ -330,7 +330,7 @@ print(modFit_test)
 postResample(predict(modFit_test, training_small), training_small$home_team_margin_final)
 postResample(predict(modFit_test, testing_small), testing_small$home_team_margin_final)
 testing_predict <- cbind(testing_small, predict(modFit_test, testing_small))
-testing_predict <- testing_predict[,c(11,1:0)]
+testing_predict <- testing_predict[,c(11,1:10)]
 names(testing_predict)[1] <- "home_team_margin_final_predict"
 testing_predict$e <- (testing_predict$home_team_margin_final_predict - testing_predict$home_team_margin_final)
 testing_predict$ee <- testing_predict$e**2
