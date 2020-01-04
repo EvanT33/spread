@@ -317,8 +317,8 @@ testing <- testing[,keep_vars]
 
 
 #testing with randomForest package
-training_small <- training[c(1:20000),]
-testing_small <- testing[c(1:5000),]
+training_small <- training[c(1:200000),]
+testing_small <- testing[c(1:50000),]
 training_small=training_small %>% mutate_if(is.character, as.factor)
 testing_small=testing_small %>% mutate_if(is.character, as.factor)
 modFit_test <- randomForest(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball + 
@@ -329,9 +329,15 @@ modFit_test <- randomForest(home_team_margin_final ~ down + ydstogo + yrdline100
 print(modFit_test)
 postResample(predict(modFit_test, training_small), training_small$home_team_margin_final)
 postResample(predict(modFit_test, testing_small), testing_small$home_team_margin_final)
-
-
-
+testing_predict <- cbind(testing_small, predict(modFit_test, testing_small))
+testing_predict <- testing_predict[,c(11,1:0)]
+names(testing_predict)[1] <- "home_team_margin_final_predict"
+testing_predict$e <- (testing_predict$home_team_margin_final_predict - testing_predict$home_team_margin_final)
+testing_predict$ee <- testing_predict$e**2
+#RMSE
+mean(testing_predict$ee)**0.5
+testing_predict$e_abs <- abs(testing_predict$e)
+mean(testing_predict$e_abs)
 
 
 
