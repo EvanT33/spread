@@ -1,5 +1,5 @@
 #calculate play-by-play spread changes
-setwd("/Users/evanthompson/SDP/spread")
+#setwd("/Users/evanthompson/SDP/spread")
 
 #load packages
 library(nflscrapR)
@@ -11,9 +11,9 @@ library(rpart)
 library(tictoc)
 library(randomForest)
 
-set.seed(69)
+set.seed(70)
 
-tic()
+
 
 # # load 2018 play-by-play data
 # season2009 <- season_play_by_play(Season = 2009)
@@ -37,9 +37,10 @@ tic()
 
 
 #start from here
-all_seasons_orig <- readRDS("~/SDP/spread_data/all_seasons_orig.rds")
+#all_seasons_orig <- readRDS("~/SDP/spread_data/all_seasons_orig.rds")
+all_seasons_orig <- readRDS("C:/Users/v-evtho/Documents/Personal/all_seasons_orig.rds")
 all_seasons <- all_seasons_orig
-historicalspreads_clean <- read.csv("~/SDP/spread_data/historicalspreads_clean.csv")
+historicalspreads_clean <- read.csv("C:/Users/v-evtho/Documents/Personal/historicalspreads_clean.csv")
 historicalspreads_clean$Date <- as.POSIXlt(mdy(as.character(historicalspreads_clean$Date)))
 
 
@@ -99,8 +100,8 @@ all_seasons$away_team_score <- as.numeric(ifelse(all_seasons$posteam == all_seas
                                                  all_seasons$DefTeamScore)) 
 all_seasons$home_team_margin <- all_seasons$home_team_score - all_seasons$away_team_score
 final_scores <- all_seasons %>%
-      group_by(GameID) %>%
-      filter(row_number()==n())
+  group_by(GameID) %>%
+  filter(row_number()==n())
 final_scores <- final_scores[,c("GameID", "home_team_margin")]
 names(final_scores) <- c("GameID", "home_team_margin_final")
 all_seasons <- merge(all_seasons, final_scores, by = "GameID")
@@ -309,6 +310,7 @@ testing <- all_seasons[-inTrain,]
 
 
 
+
 keep_vars <- c("home_team_margin_final", "down", "ydstogo", "yrdline100", "home_team_pos_ball", "home_team_pos_ball_neg",
                "home_team_margin", "TimeSecs", "HomeTeam", "AwayTeam", "home_team_spread")
 training <- training[,keep_vars]
@@ -316,44 +318,17 @@ testing <- testing[,keep_vars]
 
 
 
-# #testing with randomForest package
-# training_small <- sample_n(training, 18000)
-# testing_small <- sample_n(testing, 2000)
-# training_small=training_small %>% mutate_if(is.character, as.factor)
-# testing_small=testing_small %>% mutate_if(is.character, as.factor)
-# modFit_test <- randomForest(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball +
-#                                   #home_team_margin_final ~ (down + ydstogo + yrdline100)*home_team_pos_ball_neg +    
-#                             home_team_margin + TimeSecs + home_team_spread, 
-#                             trControl = trainControl(method = "repeatedcv", number = 20, repeats = 5), 
-#                             ntree = 400,
-#                             data = training_small)
-# print(modFit_test)
-# postResample(predict(modFit_test, training_small), training_small$home_team_margin_final)
-# postResample(predict(modFit_test, testing_small), testing_small$home_team_margin_final)
-# testing_predict <- cbind(testing_small, predict(modFit_test, testing_small))
-# testing_predict <- testing_predict[,c(11,7,1,12,2:6,8:10)]
-# names(testing_predict)[4] <- "home_team_margin_final_predict"
-# testing_predict$home_team_margin_final_predict <- round(testing_predict$home_team_margin_final_predict,1)
-# testing_predict$e <- (testing_predict$home_team_margin_final_predict - testing_predict$home_team_margin_final)
-# testing_predict$ee <- testing_predict$e**2
-# #RMSE
-# mean(testing_predict$ee)**0.5
-# testing_predict$e_abs <- abs(testing_predict$e)
-# mean(testing_predict$e_abs)
-
-
 
 #testing with randomForest package
-training_small <- sample_n(training, 18000)
-testing_small <- sample_n(testing, 2000)
+training_small <- sample_n(training, 120000)
+testing_small <- sample_n(testing, 30000)
 training_small=training_small %>% mutate_if(is.character, as.factor)
 testing_small=testing_small %>% mutate_if(is.character, as.factor)
-modFit_test <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball +
-                           home_team_margin + TimeSecs + HomeTeam + AwayTeam + home_team_spread,
-                     method = "rf",
-                     trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3),
-                     metric = "MAE",
-                     data = training_small)
+modFit_test <- randomForest(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball + 
+                              home_team_margin + TimeSecs + HomeTeam + AwayTeam + home_team_spread, 
+                            trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
+                            ntree = 200,
+                            data = training_small)
 print(modFit_test)
 postResample(predict(modFit_test, training_small), training_small$home_team_margin_final)
 postResample(predict(modFit_test, testing_small), testing_small$home_team_margin_final)
@@ -368,10 +343,7 @@ mean(testing_predict$ee)**0.5
 testing_predict$e_abs <- abs(testing_predict$e)
 mean(testing_predict$e_abs)
 
-#blackboost 7.11, no overfitting
-#glmboost 7.24, no overfitting
-#try method = tree
-#try binning yrdline100 and/or timesecs
+save(modFit_test, file = "C:/Users/v-evtho/Documents/Personal/modFit_test.rds")
 
 
 
@@ -387,69 +359,32 @@ mean(testing_predict$e_abs)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#FINAL MODEL: Model 4 (rf)
-#train final model on master dataset, merge onto master dataset
-modFit_final <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball + 
-                          home_team_margin + TimeSecs + HomeTeam + AwayTeam + home_team_spread, 
-                    method = "rf",
-                    trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
-                    metric = "RMSE",
-                    data = all_seasons)
-print(modFit_final) # RMSE (in-sample) =
-
-#merge predictions onto dataset
-all_seasons_predictions <- cbind(predict(modFit_final, all_seasons), all_seasons)
-all_seasons_predictions <- all_seasons_predictions[,c(1,120,2:119)]
-names(all_seasons_predictions)[1] <- "home_team_margin_final_predict"
-RMSE(all_seasons_predictions$home_team_margin_final_predict, all_seasons_predictions$home_team_margin_final)
-saveRDS(modFit_final, file = "modFit_final.rds")
-
-
-
-
-
-rm(training)
-rm(testing)
-rm(inTrain)
-rm(final_scores)
-rm(all_seasons)
-rm(all_seasons_orig)
-
-write.csv(all_seasons_predictions, "/Users/evanthompson/SDP/spread_data/all_seasons_predictions.csv")
-toc()
+# #FINAL MODEL: Model 4 (rf)
+# #train final model on master dataset, merge onto master dataset
+# modFit_final <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball + 
+#                         home_team_margin + TimeSecs + HomeTeam + AwayTeam + home_team_spread, 
+#                       method = "rf",
+#                       trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
+#                       metric = "RMSE",
+#                       data = all_seasons)
+# print(modFit_final) # RMSE (in-sample) =
+# 
+# #merge predictions onto dataset
+# all_seasons_predictions <- cbind(predict(modFit_final, all_seasons), all_seasons)
+# all_seasons_predictions <- all_seasons_predictions[,c(1,120,2:119)]
+# names(all_seasons_predictions)[1] <- "home_team_margin_final_predict"
+# RMSE(all_seasons_predictions$home_team_margin_final_predict, all_seasons_predictions$home_team_margin_final)
+# saveRDS(modFit_final, file = "modFit_final.rds")
+# 
+# 
+# 
+# 
+# 
+# rm(training)
+# rm(testing)
+# rm(inTrain)
+# rm(final_scores)
+# rm(all_seasons)
+# rm(all_seasons_orig)
+# 
+# write.csv(all_seasons_predictions, "/Users/evanthompson/SDP/spread_data/all_seasons_predictions.csv")
