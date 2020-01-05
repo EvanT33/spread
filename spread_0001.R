@@ -309,35 +309,105 @@ testing <- all_seasons[-inTrain,]
 
 
 
-keep_vars <- c("home_team_margin_final", "down", "ydstogo", "yrdline100", "home_team_pos_ball",
+keep_vars <- c("home_team_margin_final", "down", "ydstogo", "yrdline100", "home_team_pos_ball", "home_team_pos_ball_neg",
                "home_team_margin", "TimeSecs", "HomeTeam", "AwayTeam", "home_team_spread")
 training <- training[,keep_vars]
 testing <- testing[,keep_vars]
 
 
 
+# #testing with randomForest package
+# training_small <- sample_n(training, 18000)
+# testing_small <- sample_n(testing, 2000)
+# training_small=training_small %>% mutate_if(is.character, as.factor)
+# testing_small=testing_small %>% mutate_if(is.character, as.factor)
+# modFit_test <- randomForest(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball +
+#                                   #home_team_margin_final ~ (down + ydstogo + yrdline100)*home_team_pos_ball_neg +    
+#                             home_team_margin + TimeSecs + home_team_spread, 
+#                             trControl = trainControl(method = "repeatedcv", number = 20, repeats = 5), 
+#                             ntree = 400,
+#                             data = training_small)
+# print(modFit_test)
+# postResample(predict(modFit_test, training_small), training_small$home_team_margin_final)
+# postResample(predict(modFit_test, testing_small), testing_small$home_team_margin_final)
+# testing_predict <- cbind(testing_small, predict(modFit_test, testing_small))
+# testing_predict <- testing_predict[,c(11,7,1,12,2:6,8:10)]
+# names(testing_predict)[4] <- "home_team_margin_final_predict"
+# testing_predict$home_team_margin_final_predict <- round(testing_predict$home_team_margin_final_predict,1)
+# testing_predict$e <- (testing_predict$home_team_margin_final_predict - testing_predict$home_team_margin_final)
+# testing_predict$ee <- testing_predict$e**2
+# #RMSE
+# mean(testing_predict$ee)**0.5
+# testing_predict$e_abs <- abs(testing_predict$e)
+# mean(testing_predict$e_abs)
+
+
+
 #testing with randomForest package
-training_small <- training[c(1:200000),]
-testing_small <- testing[c(1:50000),]
+training_small <- sample_n(training, 18000)
+testing_small <- sample_n(testing, 2000)
 training_small=training_small %>% mutate_if(is.character, as.factor)
 testing_small=testing_small %>% mutate_if(is.character, as.factor)
-modFit_test <- randomForest(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball + 
-                            home_team_margin + TimeSecs + HomeTeam + AwayTeam + home_team_spread, 
-                            trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
-                            ntree = 200,
-                            data = training_small)
+modFit_test <- train(home_team_margin_final ~ down + ydstogo + yrdline100 + home_team_pos_ball +
+                           home_team_margin + TimeSecs + HomeTeam + AwayTeam + home_team_spread,
+                     method = "rf",
+                     trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3),
+                     metric = "MAE",
+                     data = training_small)
 print(modFit_test)
 postResample(predict(modFit_test, training_small), training_small$home_team_margin_final)
 postResample(predict(modFit_test, testing_small), testing_small$home_team_margin_final)
 testing_predict <- cbind(testing_small, predict(modFit_test, testing_small))
-testing_predict <- testing_predict[,c(11,1:10)]
-names(testing_predict)[1] <- "home_team_margin_final_predict"
+testing_predict <- testing_predict[,c(11,7,1,12,2:6,8:10)]
+names(testing_predict)[4] <- "home_team_margin_final_predict"
+testing_predict$home_team_margin_final_predict <- round(testing_predict$home_team_margin_final_predict,1)
 testing_predict$e <- (testing_predict$home_team_margin_final_predict - testing_predict$home_team_margin_final)
 testing_predict$ee <- testing_predict$e**2
 #RMSE
 mean(testing_predict$ee)**0.5
 testing_predict$e_abs <- abs(testing_predict$e)
 mean(testing_predict$e_abs)
+
+#blackboost 7.11, no overfitting
+#glmboost 7.24, no overfitting
+#try method = tree
+#try binning yrdline100 and/or timesecs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
