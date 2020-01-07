@@ -177,7 +177,7 @@ all_seasons  <- sample_n(all_seasons, 20000)
 modFit_final <- randomForest(home_team_margin_final ~ (down + ydstogo + yrdline100)*home_team_pos_ball_neg + 
                               home_team_margin + TimeSecs + HomeTeam + DefensiveTeam + home_team_spread, 
                             trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
-                            ntree = 200,
+                            ntree = 256,
                             data = all_seasons)
 print(modFit_final)
 
