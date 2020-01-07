@@ -71,11 +71,11 @@ all_seasons$HomeTeam <- ifelse(all_seasons$HomeTeam == "LA", "LAR", all_seasons$
 all_seasons$HomeTeam <- ifelse(all_seasons$HomeTeam == "AZ", "ARI", all_seasons$HomeTeam)
 all_seasons$HomeTeam <- ifelse(all_seasons$HomeTeam == "SD", "LAC", all_seasons$HomeTeam)
 all_seasons$HomeTeam <- ifelse(all_seasons$HomeTeam == "STL", "LAR", all_seasons$HomeTeam)
-all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "JAC", "JAX", all_seasons$DefensiveTeam)
-all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "LA", "LAR", all_seasons$DefensiveTeam)
-all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "AZ", "ARI", all_seasons$DefensiveTeam)
-all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "SD", "LAC", all_seasons$DefensiveTeam)
-all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "STL", "LAR", all_seasons$DefensiveTeam)
+all_seasons$AwayTeam <- ifelse(all_seasons$AwayTeam == "JAC", "JAX", all_seasons$AwayTeam)
+all_seasons$AwayTeam <- ifelse(all_seasons$AwayTeam == "LA", "LAR", all_seasons$AwayTeam)
+all_seasons$AwayTeam <- ifelse(all_seasons$AwayTeam == "AZ", "ARI", all_seasons$AwayTeam)
+all_seasons$AwayTeam <- ifelse(all_seasons$AwayTeam == "SD", "LAC", all_seasons$AwayTeam)
+all_seasons$AwayTeam <- ifelse(all_seasons$AwayTeam == "STL", "LAR", all_seasons$AwayTeam)
 all_seasons$posteam <- ifelse(all_seasons$posteam == "JAC", "JAX", all_seasons$posteam)
 all_seasons$posteam <- ifelse(all_seasons$posteam == "LA", "LAR", all_seasons$posteam)
 all_seasons$posteam <- ifelse(all_seasons$posteam == "AZ", "ARI", all_seasons$posteam)
@@ -156,7 +156,7 @@ all_seasons=all_seasons %>% mutate_if(is.character, as.factor)
 
 
 # keep_vars <- c("home_team_margin_final", "down", "ydstogo", "yrdline100", "home_team_pos_ball", "home_team_pos_ball_neg",
-#                "home_team_margin", "TimeSecs", "HomeTeam", "DefensiveTeam", "home_team_spread")
+#                "home_team_margin", "TimeSecs", "HomeTeam", "AwayTeam", "home_team_spread")
 # training <- training[,keep_vars]
 # testing <- testing[,keep_vars]
 
@@ -175,7 +175,7 @@ all_seasons  <- sample_n(all_seasons, 20000)
 
 #FINAL MODEL
 modFit_final <- randomForest(home_team_margin_final ~ (down + ydstogo + yrdline100)*home_team_pos_ball_neg + 
-                              home_team_margin + TimeSecs + HomeTeam + DefensiveTeam + home_team_spread, 
+                              home_team_margin + TimeSecs + HomeTeam + AwayTeam + home_team_spread, 
                             trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
                             ntree = 256,
                             data = all_seasons)
@@ -262,7 +262,7 @@ save(modFit_final, file = paste(wd,"modFit_final.rds",sep="/"))
 # #for demo
 # all_seasons_2 <- all_seasons
 # keep_names <- c("down", "ydstogo", "yrdline100", "home_team_pos_ball_neg", "home_team_margin", 
-#                               "TimeSecs", "HomeTeam", "DefensiveTeam", "home_team_spread")
+#                               "TimeSecs", "HomeTeam", "AwayTeam", "home_team_spread")
 # sample_input1 <- all_seasons_2[1,keep_names]
 # sample_input2 <- all_seasons_2[1,keep_names]
 # sample_input3 <- all_seasons_2[1,keep_names]
