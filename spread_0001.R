@@ -57,7 +57,7 @@ library(randomForest)
 # # binding into a single dataset
 # all_seasons_orig <- rbind(season2009, season2010, season2011, season2012,
 #                      season2013,season2014, season2015, season2016,
-#                      season2017, season2018)
+#                      season2017, season2018, season2019)
 # saveRDS(all_seasons_orig, file = paste(wd,"all_seasons_orig.rds",sep="/"))
 
 
@@ -126,7 +126,7 @@ all_seasons=all_seasons %>% mutate_if(is.character, as.factor)
 # rm(season2016)
 # rm(season2017)
 # rm(season2018)
-
+# rm(season2019)
 
 
 #partition
