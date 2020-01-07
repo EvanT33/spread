@@ -94,6 +94,8 @@ historicalspreads_clean$Date <- as.POSIXlt(mdy(as.character(historicalspreads_cl
 all_seasons <- merge(all_seasons, historicalspreads_clean, by = c("Date", "HomeTeam"))
 
 
+#optional load of finalized model, if you have it
+#load(paste(wd,"modFit_final.rds", sep = "/"))
 
 
 #cleaning
@@ -259,9 +261,9 @@ save(modFit_final, file = paste(wd,"modFit_final.rds",sep="/"))
 
 
 
-# #for demo
+#for demo
 # all_seasons_2 <- all_seasons
-# keep_names <- c("down", "ydstogo", "yrdline100", "home_team_pos_ball_neg", "home_team_margin", 
+# keep_names <- c("down", "ydstogo", "yrdline100", "home_team_pos_ball_neg", "home_team_margin",
 #                               "TimeSecs", "HomeTeam", "AwayTeam", "home_team_spread")
 # sample_input1 <- all_seasons_2[1,keep_names]
 # sample_input2 <- all_seasons_2[1,keep_names]
