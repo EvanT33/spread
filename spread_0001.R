@@ -1,6 +1,9 @@
 #predict play-by-play spread changes
 
+#How to use: predict(modFit_final, sample_input) outputs spread prediction,
+#where sample_input is a n x 9 dataframe consisting of the 9 input vars.
 
+#What this script does:
 # 0. (Optionally creates historical pbp dataset using nflscrapR)
 # 1. Read in historical pbp data
 # 2. Read in historical spread data
