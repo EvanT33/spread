@@ -51,6 +51,7 @@ library(randomForest)
 # season2016 <- season_play_by_play(Season = 2016)
 # season2017 <- season_play_by_play(Season = 2017)
 # season2018 <- season_play_by_play(Season = 2018)
+# season2019 <- season_play_by_play(Season = 2019)
 # 
 # 
 # # binding into a single dataset
