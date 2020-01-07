@@ -19,8 +19,8 @@
 #should maintain a separate, local directory to copy those files into before pushing to GH
 
 #change this
-#setwd("/Users/evanthompson/SDP/spread_data")
-setwd("C:/Users/v-evtho/Documents/Personal")
+setwd("/Users/evanthompson/SDP/spread_data")
+#setwd("C:/Users/v-evtho/Documents/Personal")
 
 
 wd <- getwd()
@@ -51,13 +51,14 @@ library(randomForest)
 # season2016 <- season_play_by_play(Season = 2016)
 # season2017 <- season_play_by_play(Season = 2017)
 # season2018 <- season_play_by_play(Season = 2018)
-# season2019 <- season_play_by_play(Season = 2019)
+# #season2019 <- season_play_by_play(Season = 2019) # IGNORE 2019 UNTIL WE GET 2019 SPREADS
 # 
 # 
 # # binding into a single dataset
 # all_seasons_orig <- rbind(season2009, season2010, season2011, season2012,
 #                      season2013,season2014, season2015, season2016,
-#                      season2017, season2018, season2019)
+#                      season2017, season2018 #, season2019
+# )
 # saveRDS(all_seasons_orig, file = paste(wd,"all_seasons_orig.rds",sep="/"))
 
 
@@ -65,6 +66,26 @@ library(randomForest)
 #If you have all_seasons_orig.rds and historicalspreads_clean.csv, start from here
 all_seasons_orig <- readRDS(paste(wd,"all_seasons_orig.rds",sep="/"))
 all_seasons <- all_seasons_orig
+all_seasons$HomeTeam <- ifelse(all_seasons$HomeTeam == "JAC", "JAX", all_seasons$HomeTeam)
+all_seasons$HomeTeam <- ifelse(all_seasons$HomeTeam == "LA", "LAR", all_seasons$HomeTeam)
+all_seasons$HomeTeam <- ifelse(all_seasons$HomeTeam == "AZ", "ARI", all_seasons$HomeTeam)
+all_seasons$HomeTeam <- ifelse(all_seasons$HomeTeam == "SD", "LAC", all_seasons$HomeTeam)
+all_seasons$HomeTeam <- ifelse(all_seasons$HomeTeam == "STL", "LAR", all_seasons$HomeTeam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "JAC", "JAX", all_seasons$DefensiveTeam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "LA", "LAR", all_seasons$DefensiveTeam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "AZ", "ARI", all_seasons$DefensiveTeam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "SD", "LAC", all_seasons$DefensiveTeam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "STL", "LAR", all_seasons$DefensiveTeam)
+all_seasons$posteam <- ifelse(all_seasons$posteam == "JAC", "JAX", all_seasons$posteam)
+all_seasons$posteam <- ifelse(all_seasons$posteam == "LA", "LAR", all_seasons$posteam)
+all_seasons$posteam <- ifelse(all_seasons$posteam == "AZ", "ARI", all_seasons$posteam)
+all_seasons$posteam <- ifelse(all_seasons$posteam == "SD", "LAC", all_seasons$posteam)
+all_seasons$posteam <- ifelse(all_seasons$posteam == "STL", "LAR", all_seasons$posteam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "JAC", "JAX", all_seasons$DefensiveTeam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "LA", "LAR", all_seasons$DefensiveTeam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "AZ", "ARI", all_seasons$DefensiveTeam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "SD", "LAC", all_seasons$DefensiveTeam)
+all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "STL", "LAR", all_seasons$DefensiveTeam)
 historicalspreads_clean <- read.csv(paste(wd,"historicalspreads_clean.csv",sep="/"))
 historicalspreads_clean$Date <- as.POSIXlt(mdy(as.character(historicalspreads_clean$Date)))
 
@@ -78,7 +99,6 @@ all_seasons <- merge(all_seasons, historicalspreads_clean, by = c("Date", "HomeT
 #cleaning
 all_seasons <- all_seasons[ which(is.na(all_seasons$ExPointResult)),]
 all_seasons <- all_seasons[ which(is.na(all_seasons$TwoPointConv)),]
-all_seasons$DefensiveTeam <- ifelse(all_seasons$DefensiveTeam == "JAX", "JAC", all_seasons$DefensiveTeam)
 all_seasons <- all_seasons[ which(!is.na(all_seasons$down)),]
 all_seasons$por <- ifelse(substr(all_seasons$desc, start=5, stop=21) == "play under review", 1, 0)
 all_seasons <- all_seasons[ which( all_seasons$por == 0),]
@@ -90,7 +110,6 @@ all_seasons <- all_seasons[ which(all_seasons$DesiredPlayType == 1),]
 all_seasons$offense_year <- paste(all_seasons$posteam, all_seasons$Season, sep = "_", collapse = NULL)
 all_seasons$defense_year <- paste(all_seasons$DefensiveTeam, all_seasons$Season, sep = "_", collapse = NULL)
 all_seasons$AwayTeam <- all_seasons$AwayTeam.x
-
 
 
 
@@ -137,7 +156,7 @@ all_seasons=all_seasons %>% mutate_if(is.character, as.factor)
 
 
 # keep_vars <- c("home_team_margin_final", "down", "ydstogo", "yrdline100", "home_team_pos_ball", "home_team_pos_ball_neg",
-#                "home_team_margin", "TimeSecs", "HomeTeam", "AwayTeam", "home_team_spread")
+#                "home_team_margin", "TimeSecs", "HomeTeam", "DefensiveTeam", "home_team_spread")
 # training <- training[,keep_vars]
 # testing <- testing[,keep_vars]
 
@@ -156,7 +175,7 @@ all_seasons  <- sample_n(all_seasons, 20000)
 
 #FINAL MODEL
 modFit_final <- randomForest(home_team_margin_final ~ (down + ydstogo + yrdline100)*home_team_pos_ball_neg + 
-                              home_team_margin + TimeSecs + HomeTeam + AwayTeam + home_team_spread, 
+                              home_team_margin + TimeSecs + HomeTeam + DefensiveTeam + home_team_spread, 
                             trControl = trainControl(method = "repeatedcv", number = 10, repeats = 3), 
                             ntree = 200,
                             data = all_seasons)
@@ -243,7 +262,7 @@ save(modFit_final, file = paste(wd,"modFit_final.rds",sep="/"))
 # #for demo
 # all_seasons_2 <- all_seasons
 # keep_names <- c("down", "ydstogo", "yrdline100", "home_team_pos_ball_neg", "home_team_margin", 
-#                               "TimeSecs", "HomeTeam", "AwayTeam", "home_team_spread")
+#                               "TimeSecs", "HomeTeam", "DefensiveTeam", "home_team_spread")
 # sample_input1 <- all_seasons_2[1,keep_names]
 # sample_input2 <- all_seasons_2[1,keep_names]
 # sample_input3 <- all_seasons_2[1,keep_names]
